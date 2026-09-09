@@ -1,7 +1,7 @@
 extends Control
 
 ## Main Menu for "Very Hot"
-## Features interactive live 3D background with zero signal recursion and instant settings response.
+## Interactive 3D background with instant settings feedback.
 
 @onready var btn_play = $UI/CenterContainer/VBoxContainer/PlayButton
 @onready var btn_settings = $UI/CenterContainer/VBoxContainer/SettingsButton
@@ -15,7 +15,6 @@ extends Control
 
 @onready var check_shadows = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckShadows
 @onready var check_ssao = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckSSAO
-@onready var check_rays = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckRays
 @onready var check_bloom = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckBloom
 
 @onready var controls_modal = $UI/ControlsModal
@@ -24,7 +23,6 @@ extends Control
 @onready var cam_pivot = $Menu3D/CameraPivot
 @onready var world_env = $Menu3D/WorldEnvironment
 @onready var dir_light = $Menu3D/DirectionalLight3D
-@onready var sun_rays = $Menu3D/SunRays
 @onready var enemy_preview_mesh = $Menu3D/EnemyPreviewMesh
 
 func _ready() -> void:
@@ -54,13 +52,11 @@ func _ready() -> void:
 		check_shadows.toggled.connect(func(val): GameManager.set_graphics_param("shadows", val))
 	if check_ssao:
 		check_ssao.toggled.connect(func(val): GameManager.set_graphics_param("ssao", val))
-	if check_rays:
-		check_rays.toggled.connect(func(val): GameManager.set_graphics_param("volumetric_rays", val))
 	if check_bloom:
 		check_bloom.toggled.connect(func(val): GameManager.set_graphics_param("bloom", val))
 	
 	_sync_ui_values()
-	GameManager.apply_graphics_to_current_scene(world_env, dir_light, sun_rays)
+	GameManager.apply_graphics_to_current_scene(world_env, dir_light)
 	GameManager.graphics_settings_changed.connect(_on_graphics_changed)
 
 func _process(delta: float) -> void:
@@ -68,12 +64,12 @@ func _process(delta: float) -> void:
 		cam_pivot.rotate_y(delta * 0.1)
 
 func _on_graphics_changed() -> void:
-	GameManager.apply_graphics_to_current_scene(world_env, dir_light, sun_rays)
+	GameManager.apply_graphics_to_current_scene(world_env, dir_light)
 	if enemy_preview_mesh and enemy_preview_mesh.mesh and enemy_preview_mesh.mesh.material:
 		var mat = enemy_preview_mesh.mesh.material as StandardMaterial3D
 		if mat:
 			mat.emission_enabled = GameManager.bloom_enabled
-			mat.emission_energy_multiplier = 1.5 if GameManager.bloom_enabled else 0.0
+			mat.emission_energy_multiplier = 0.5 if GameManager.bloom_enabled else 0.0
 
 func _sync_ui_values() -> void:
 	if sens_slider:
@@ -84,8 +80,6 @@ func _sync_ui_values() -> void:
 		check_shadows.set_pressed_no_signal(GameManager.shadows_enabled)
 	if check_ssao:
 		check_ssao.set_pressed_no_signal(GameManager.ssao_enabled)
-	if check_rays:
-		check_rays.set_pressed_no_signal(GameManager.volumetric_rays_enabled)
 	if check_bloom:
 		check_bloom.set_pressed_no_signal(GameManager.bloom_enabled)
 

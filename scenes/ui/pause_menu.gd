@@ -11,7 +11,6 @@ extends CanvasLayer
 
 @onready var check_shadows = $Control/Panel/VBoxContainer/GraphicsBox/CheckShadows
 @onready var check_ssao = $Control/Panel/VBoxContainer/GraphicsBox/CheckSSAO
-@onready var check_rays = $Control/Panel/VBoxContainer/GraphicsBox/CheckRays
 @onready var check_bloom = $Control/Panel/VBoxContainer/GraphicsBox/CheckBloom
 
 func _ready() -> void:
@@ -33,8 +32,6 @@ func _ready() -> void:
 		check_shadows.toggled.connect(func(val): GameManager.set_graphics_param("shadows", val))
 	if check_ssao:
 		check_ssao.toggled.connect(func(val): GameManager.set_graphics_param("ssao", val))
-	if check_rays:
-		check_rays.toggled.connect(func(val): GameManager.set_graphics_param("volumetric_rays", val))
 	if check_bloom:
 		check_bloom.toggled.connect(func(val): GameManager.set_graphics_param("bloom", val))
 	
@@ -47,8 +44,6 @@ func _sync_ui_values() -> void:
 		check_shadows.set_pressed_no_signal(GameManager.shadows_enabled)
 	if check_ssao:
 		check_ssao.set_pressed_no_signal(GameManager.ssao_enabled)
-	if check_rays:
-		check_rays.set_pressed_no_signal(GameManager.volumetric_rays_enabled)
 	if check_bloom:
 		check_bloom.set_pressed_no_signal(GameManager.bloom_enabled)
 
