@@ -35,13 +35,17 @@ func _ready() -> void:
 	
 	if victory_restart_btn:
 		victory_restart_btn.pressed.connect(_on_restart_pressed)
+		victory_restart_btn.button_down.connect(_on_restart_pressed)
 	if victory_menu_btn:
 		victory_menu_btn.pressed.connect(_on_menu_pressed)
+		victory_menu_btn.button_down.connect(_on_menu_pressed)
 	
 	if defeat_restart_btn:
 		defeat_restart_btn.pressed.connect(_on_restart_pressed)
+		defeat_restart_btn.button_down.connect(_on_restart_pressed)
 	if defeat_menu_btn:
 		defeat_menu_btn.pressed.connect(_on_menu_pressed)
+		defeat_menu_btn.button_down.connect(_on_menu_pressed)
 
 func _show_intro_banner() -> void:
 	if banner_label:
@@ -70,6 +74,7 @@ func _on_player_damaged(hp: int) -> void:
 func _on_victory() -> void:
 	SoundManager.play_victory()
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_hide_mobile_controls()
 	if victory_panel:
 		victory_panel.visible = true
 		_animate_superhot_text()
@@ -93,8 +98,15 @@ func _animate_superhot_text() -> void:
 
 func _on_defeat() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_hide_mobile_controls()
 	if defeat_panel:
 		defeat_panel.visible = true
+
+func _hide_mobile_controls() -> void:
+	var mobile_nodes = get_tree().get_nodes_in_group("mobile_controls")
+	for m in mobile_nodes:
+		if m is CanvasLayer or m is Control:
+			m.visible = false
 
 func _on_restart_pressed() -> void:
 	GameManager.restart_game()

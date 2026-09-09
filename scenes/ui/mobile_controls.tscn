@@ -8,8 +8,8 @@
 [ext_resource type="Texture2D" path="res://assets/ui/pickup.png" id="6_pickup"]
 [ext_resource type="Texture2D" path="res://assets/ui/pause.png" id="7_pause"]
 
-[node name="MobileControls" type="CanvasLayer"]
-layer = 5
+[node name="MobileControls" type="CanvasLayer" groups=["mobile_controls"]]
+layer = 2
 script = ExtResource("1_mobile")
 
 [node name="Control" type="Control" parent="."]

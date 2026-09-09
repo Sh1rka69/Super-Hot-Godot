@@ -1,7 +1,7 @@
 extends CharacterBody3D
 
 ## Enemy Controller for "Very Hot"
-## Features fair AI pacing, telegraph delays, and optimized animation switching.
+## Features SUPERHOT AI: enemy stands idle until player acts, with clear aiming telegraphs.
 
 enum EnemyState { IDLE, CHASE, ATTACK_MELEE, ATTACK_RANGED, PICKUP, HIT, DEAD }
 
@@ -11,7 +11,7 @@ enum EnemyState { IDLE, CHASE, ATTACK_MELEE, ATTACK_RANGED, PICKUP, HIT, DEAD }
 @export var shoot_range: float = 9.0
 @export var detection_range: float = 14.0
 @export var has_gun: bool = true
-@export var spawn_grace_period: float = 2.5 # Player has time to assess and move first
+@export var spawn_grace_period: float = 2.0
 
 var current_health: int = 100
 var current_state: EnemyState = EnemyState.IDLE
@@ -19,8 +19,7 @@ var target_player: Node3D = null
 var is_dead: bool = false
 var state_timer: float = 0.0
 var grace_timer: float = 0.0
-var aim_windup_timer: float = 0.0
-var is_aiming: bool = false
+var shoot_cooldown: float = 0.0
 
 # Model preloads
 const MODEL_STANDING_SCENE = preload("res://assets/models/enemy/Standing.fbx")
@@ -46,6 +45,7 @@ var crystal_material: StandardMaterial3D
 func _ready() -> void:
 	current_health = max_health
 	grace_timer = spawn_grace_period
+	shoot_cooldown = 1.5
 	
 	if aim_telegraph:
 		aim_telegraph.visible = false
@@ -178,7 +178,6 @@ func set_state(new_state: EnemyState) -> void:
 	
 	current_state = new_state
 	state_timer = 0.0
-	is_aiming = false
 	if aim_telegraph:
 		aim_telegraph.visible = false
 	
@@ -209,6 +208,8 @@ func _physics_process(delta: float) -> void:
 	
 	if grace_timer > 0.0:
 		grace_timer -= delta
+	if shoot_cooldown > 0.0:
+		shoot_cooldown -= delta
 	
 	state_timer += delta
 	
@@ -221,6 +222,8 @@ func _physics_process(delta: float) -> void:
 	to_player.y = 0.0
 	var dist: float = to_player.length()
 	
+	var player_has_acted = target_player.get("has_moved_yet") if target_player.get("has_moved_yet") != null else true
+	
 	# Look towards player
 	if dist > 0.1 and current_state != EnemyState.HIT and current_state != EnemyState.DEAD:
 		var target_rot_y = atan2(to_player.x, to_player.z)
@@ -230,17 +233,19 @@ func _physics_process(delta: float) -> void:
 		EnemyState.IDLE:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			# Only transition after grace period has expired
-			if grace_timer <= 0.0 and dist < detection_range:
-				if equipped_pistol and dist <= shoot_range:
+			# Only start acting when player makes a move AND grace period has passed
+			if player_has_acted and grace_timer <= 0.0 and dist < detection_range:
+				if equipped_pistol and dist <= shoot_range and shoot_cooldown <= 0.0:
 					set_state(EnemyState.ATTACK_RANGED)
 				else:
 					set_state(EnemyState.CHASE)
 		
 		EnemyState.CHASE:
-			if dist <= melee_range:
+			if not player_has_acted:
+				set_state(EnemyState.IDLE)
+			elif dist <= melee_range:
 				set_state(EnemyState.ATTACK_MELEE)
-			elif equipped_pistol and dist <= shoot_range and randf() < 0.015:
+			elif equipped_pistol and dist <= shoot_range and shoot_cooldown <= 0.0:
 				set_state(EnemyState.ATTACK_RANGED)
 			else:
 				var dir: Vector3 = to_player.normalized()
@@ -250,7 +255,6 @@ func _physics_process(delta: float) -> void:
 		EnemyState.ATTACK_MELEE:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			# Punch windup strike at 0.4s
 			if state_timer >= 0.4 and state_timer - delta < 0.4:
 				_perform_melee_punch()
 			if state_timer >= 0.9:
@@ -262,19 +266,21 @@ func _physics_process(delta: float) -> void:
 		EnemyState.ATTACK_RANGED:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			# Aim telegraph laser active for first 0.6s
-			if state_timer < 0.7:
+			
+			# Telegraph laser is active for first 1.0s
+			if state_timer < 1.0:
 				if aim_telegraph:
 					aim_telegraph.visible = true
 			else:
 				if aim_telegraph:
 					aim_telegraph.visible = false
 			
-			# Fire gun at 0.75s (giving player ample time to dodge)
-			if state_timer >= 0.75 and state_timer - delta < 0.75:
+			# Fire after 1.1s aiming delay
+			if state_timer >= 1.1 and state_timer - delta < 1.1:
 				_perform_ranged_shot()
+				shoot_cooldown = 2.5 # Cooldown before next shot
 			
-			if state_timer >= 1.4:
+			if state_timer >= 1.8:
 				if dist > melee_range:
 					set_state(EnemyState.CHASE)
 				else:
