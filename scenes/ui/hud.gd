@@ -1,20 +1,25 @@
 extends CanvasLayer
 
 ## HUD for "Very Hot"
-## Manages Crosshair, Time Scale feedback, Victory/Defeat overlays, and Damage Vignette.
+## Manages Crosshair, Time Scale feedback, Victory/Defeat overlays, and reliable Respawn button.
 
 @onready var crosshair = $Control/Crosshair
 @onready var banner_label = $Control/BannerLabel
 @onready var time_meter = $Control/TimeMeter
+@onready var hp_label = $Control/HPContainer/HPLabel
 @onready var damage_vignette = $Control/DamageVignette
 @onready var victory_panel = $Control/VictoryPanel
 @onready var victory_label_1 = $Control/VictoryPanel/SuperLabel
 @onready var victory_label_2 = $Control/VictoryPanel/HotLabel
+@onready var victory_restart_btn = $Control/VictoryPanel/VBoxContainer/RestartButton
+@onready var victory_menu_btn = $Control/VictoryPanel/VBoxContainer/MenuButton
 @onready var defeat_panel = $Control/DefeatPanel
-@onready var victory_restart_btn = $Control/VictoryPanel/RestartButton
-@onready var defeat_restart_btn = $Control/DefeatPanel/RestartButton
+@onready var defeat_restart_btn = $Control/DefeatPanel/VBoxContainer/RestartButton
+@onready var defeat_menu_btn = $Control/DefeatPanel/VBoxContainer/MenuButton
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	
 	if victory_panel:
 		victory_panel.visible = false
 	if defeat_panel:
@@ -30,32 +35,41 @@ func _ready() -> void:
 	
 	if victory_restart_btn:
 		victory_restart_btn.pressed.connect(_on_restart_pressed)
+	if victory_menu_btn:
+		victory_menu_btn.pressed.connect(_on_menu_pressed)
+	
 	if defeat_restart_btn:
 		defeat_restart_btn.pressed.connect(_on_restart_pressed)
+	if defeat_menu_btn:
+		defeat_menu_btn.pressed.connect(_on_menu_pressed)
 
 func _show_intro_banner() -> void:
 	if banner_label:
 		banner_label.text = "TIME MOVES ONLY WHEN YOU MOVE"
 		banner_label.modulate.a = 1.0
 		var tween = create_tween()
-		tween.tween_interval(2.5)
-		tween.tween_property(banner_label, "modulate:a", 0.0, 1.0)
+		tween.tween_interval(2.2)
+		tween.tween_property(banner_label, "modulate:a", 0.0, 0.8)
 
 func _on_time_scale_changed(scale_val: float) -> void:
 	if time_meter:
 		time_meter.value = scale_val * 100.0
 
 func _on_player_damaged(hp: int) -> void:
+	if hp_label:
+		hp_label.text = "HP: %d" % max(0, hp)
+	
 	if damage_vignette:
 		var tween = create_tween()
-		tween.tween_property(damage_vignette, "modulate:a", 0.6, 0.05)
-		tween.tween_property(damage_vignette, "modulate:a", 0.0, 0.4)
+		tween.tween_property(damage_vignette, "modulate:a", 0.65, 0.04)
+		tween.tween_property(damage_vignette, "modulate:a", 0.0, 0.35)
 	
 	if hp <= 0:
 		_on_defeat()
 
 func _on_victory() -> void:
 	SoundManager.play_victory()
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if victory_panel:
 		victory_panel.visible = true
 		_animate_superhot_text()
@@ -78,8 +92,12 @@ func _animate_superhot_text() -> void:
 		loop_tween.tween_interval(0.4)
 
 func _on_defeat() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	if defeat_panel:
 		defeat_panel.visible = true
 
 func _on_restart_pressed() -> void:
 	GameManager.restart_game()
+
+func _on_menu_pressed() -> void:
+	GameManager.go_to_main_menu()

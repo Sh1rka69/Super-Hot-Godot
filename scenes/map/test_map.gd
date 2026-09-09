@@ -1,7 +1,7 @@
 extends Node3D
 
 ## TestMap Scene for "Very Hot"
-## Instances the map model (VH_TestMap.gltf), generates collisions, and applies SUPERHOT styling.
+## Lightweight, high performance map setup with clean minimalist materials.
 
 const MAP_GLTF_SCENE: PackedScene = preload("res://assets/models/map/VH_TestMap.gltf")
 
@@ -14,10 +14,9 @@ var wall_material: StandardMaterial3D
 
 func _ready() -> void:
 	_create_materials()
-	_instance_and_setup_map()
+	_instance_map()
 
 func _create_materials() -> void:
-	# Minimalist SUPERHOT white / light-gray architectural styling
 	floor_material = StandardMaterial3D.new()
 	floor_material.albedo_color = Color(0.92, 0.93, 0.95, 1.0)
 	floor_material.roughness = 0.35
@@ -28,24 +27,19 @@ func _create_materials() -> void:
 	wall_material.roughness = 0.45
 	wall_material.metallic = 0.02
 
-func _instance_and_setup_map() -> void:
+func _instance_map() -> void:
 	var map_inst = MAP_GLTF_SCENE.instantiate()
 	map_container.add_child(map_inst)
-	_setup_mesh_collisions_and_materials(map_inst)
+	_apply_materials_only(map_inst)
 
-func _setup_mesh_collisions_and_materials(node: Node) -> void:
-	var children = node.get_children()
-	for child in children:
-		_setup_mesh_collisions_and_materials(child)
-	
+func _apply_materials_only(node: Node) -> void:
 	if node is MeshInstance3D:
 		var mesh_inst: MeshInstance3D = node as MeshInstance3D
-		if mesh_inst.mesh:
-			var node_name = mesh_inst.name.to_lower()
-			if "плоскость" in node_name or "floor" in node_name or "plane" in node_name:
-				mesh_inst.material_override = floor_material
-			else:
-				mesh_inst.material_override = wall_material
-			
-			# Generate static collision for the mesh
-			mesh_inst.create_trimesh_collision()
+		var node_name = mesh_inst.name.to_lower()
+		if "плоскость" in node_name or "floor" in node_name or "plane" in node_name:
+			mesh_inst.material_override = floor_material
+		else:
+			mesh_inst.material_override = wall_material
+	
+	for child in node.get_children():
+		_apply_materials_only(child)

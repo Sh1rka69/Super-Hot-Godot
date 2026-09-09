@@ -8,8 +8,8 @@ config_version=5
 
 config/name="Very Hot"
 config/description="SUPERHOT-inspired Slow Motion FPS Action Game in Godot Engine 4 with full Mobile Android Touch Controls and PC support."
-run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.3", "Forward Plus")
+run/main_scene="res://scenes/ui/main_menu.tscn"
+config/features=PackedStringArray("4.3", "Mobile")
 config/icon="res://assets/ui/run.png"
 
 [autoload]
@@ -26,6 +26,7 @@ window/size/resizable=true
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=6
+window/vsync/vsync_mode=1
 
 [input_devices]
 
@@ -84,7 +85,8 @@ primary_action={
 
 [rendering]
 
-renderer/rendering_method="forward_plus"
+renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="mobile"
+renderer/rendering_method.web="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
-anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/msaa_3d=1

@@ -1,30 +1,28 @@
 extends CharacterBody3D
 
 ## Enemy Controller for "Very Hot"
-## Implements AI state machine using the provided animations:
-## - Standing.fbx (Idle / default)
-## - Running.fbx (Chase)
-## - Shooting.fbx (Ranged attack)
-## - Right Hook.fbx (Melee punch)
-## - Pick Up Item.fbx (Pick up weapon)
-## - Light Hit To Head.fbx (Hit / Death reaction)
+## Features fair AI pacing, telegraph delays, and optimized animation switching.
 
 enum EnemyState { IDLE, CHASE, ATTACK_MELEE, ATTACK_RANGED, PICKUP, HIT, DEAD }
 
 @export var max_health: int = 100
-@export var chase_speed: float = 3.6
+@export var chase_speed: float = 3.2
 @export var melee_range: float = 1.75
-@export var shoot_range: float = 8.0
+@export var shoot_range: float = 9.0
 @export var detection_range: float = 14.0
 @export var has_gun: bool = true
+@export var spawn_grace_period: float = 2.5 # Player has time to assess and move first
 
 var current_health: int = 100
 var current_state: EnemyState = EnemyState.IDLE
 var target_player: Node3D = null
 var is_dead: bool = false
 var state_timer: float = 0.0
+var grace_timer: float = 0.0
+var aim_windup_timer: float = 0.0
+var is_aiming: bool = false
 
-# Preloaded FBX models
+# Model preloads
 const MODEL_STANDING_SCENE = preload("res://assets/models/enemy/Standing.fbx")
 const MODEL_RUNNING_SCENE = preload("res://assets/models/enemy/Running.fbx")
 const MODEL_SHOOTING_SCENE = preload("res://assets/models/enemy/Shooting.fbx")
@@ -34,19 +32,24 @@ const MODEL_HIT_SCENE = preload("res://assets/models/enemy/Light Hit To Head.fbx
 const SHATTER_SCENE = preload("res://scenes/enemy/shatter_debris.tscn")
 const PISTOL_SCENE = preload("res://scenes/weapons/pistol.tscn")
 
-# Active model instances
 var model_nodes: Dictionary = {}
 var active_anim_player: AnimationPlayer = null
 
 @onready var models_container: Node3D = $ModelsContainer
 @onready var gun_slot: Marker3D = $GunSlot
 @onready var los_raycast: RayCast3D = $LOSRayCast
+@onready var aim_telegraph: MeshInstance3D = $AimTelegraph
 
 var equipped_pistol: Node3D = null
 var crystal_material: StandardMaterial3D
 
 func _ready() -> void:
 	current_health = max_health
+	grace_timer = spawn_grace_period
+	
+	if aim_telegraph:
+		aim_telegraph.visible = false
+	
 	_create_crystal_material()
 	_instantiate_all_models()
 	_find_player()
@@ -58,12 +61,12 @@ func _ready() -> void:
 
 func _create_crystal_material() -> void:
 	crystal_material = StandardMaterial3D.new()
-	crystal_material.albedo_color = Color(0.95, 0.12, 0.06, 1.0)
-	crystal_material.roughness = 0.18
+	crystal_material.albedo_color = Color(0.95, 0.1, 0.04, 1.0)
+	crystal_material.roughness = 0.2
 	crystal_material.metallic = 0.15
 	crystal_material.emission_enabled = true
-	crystal_material.emission = Color(0.85, 0.08, 0.02)
-	crystal_material.emission_energy_multiplier = 0.5
+	crystal_material.emission = Color(0.8, 0.05, 0.0)
+	crystal_material.emission_energy_multiplier = 0.4
 
 func _instantiate_all_models() -> void:
 	var model_defs = {
@@ -75,9 +78,9 @@ func _instantiate_all_models() -> void:
 		EnemyState.HIT: MODEL_HIT_SCENE,
 	}
 	
-	var successfully_loaded = 0
+	var loaded_count = 0
 	for state_key in model_defs:
-		var scene = model_defs[state_key]
+		var scene: PackedScene = model_defs[state_key]
 		if scene:
 			var inst = scene.instantiate()
 			if inst:
@@ -86,17 +89,15 @@ func _instantiate_all_models() -> void:
 				inst.visible = false
 				model_nodes[state_key] = inst
 				_configure_animation(inst, state_key)
-				successfully_loaded += 1
+				loaded_count += 1
 	
-	# Fallback humanoid mesh if FBX is loading or needs visual representation
-	if successfully_loaded == 0:
+	if loaded_count == 0:
 		_create_fallback_humanoid()
 
 func _create_fallback_humanoid() -> void:
 	var fallback_root = Node3D.new()
 	fallback_root.name = "FallbackHumanoid"
 	
-	# Head
 	var head_mesh = MeshInstance3D.new()
 	var sphere = SphereMesh.new()
 	sphere.radius = 0.18
@@ -106,7 +107,6 @@ func _create_fallback_humanoid() -> void:
 	head_mesh.position = Vector3(0, 1.55, 0)
 	fallback_root.add_child(head_mesh)
 	
-	# Torso
 	var torso_mesh = MeshInstance3D.new()
 	var box = BoxMesh.new()
 	box.size = Vector3(0.42, 0.65, 0.22)
@@ -115,7 +115,6 @@ func _create_fallback_humanoid() -> void:
 	torso_mesh.position = Vector3(0, 1.05, 0)
 	fallback_root.add_child(torso_mesh)
 	
-	# Legs
 	var leg_l = MeshInstance3D.new()
 	var leg_mesh = BoxMesh.new()
 	leg_mesh.size = Vector3(0.14, 0.72, 0.14)
@@ -179,8 +178,10 @@ func set_state(new_state: EnemyState) -> void:
 	
 	current_state = new_state
 	state_timer = 0.0
+	is_aiming = false
+	if aim_telegraph:
+		aim_telegraph.visible = false
 	
-	# Switch visible model
 	for state_key in model_nodes:
 		var model = model_nodes[state_key]
 		if state_key == new_state:
@@ -206,9 +207,11 @@ func _physics_process(delta: float) -> void:
 		if not target_player:
 			return
 	
+	if grace_timer > 0.0:
+		grace_timer -= delta
+	
 	state_timer += delta
 	
-	# Gravity
 	if not is_on_floor():
 		velocity.y -= 18.0 * delta
 	else:
@@ -221,14 +224,14 @@ func _physics_process(delta: float) -> void:
 	# Look towards player
 	if dist > 0.1 and current_state != EnemyState.HIT and current_state != EnemyState.DEAD:
 		var target_rot_y = atan2(to_player.x, to_player.z)
-		rotation.y = lerp_angle(rotation.y, target_rot_y, clampf(delta * 8.0, 0.0, 1.0))
+		rotation.y = lerp_angle(rotation.y, target_rot_y, clampf(delta * 6.0, 0.0, 1.0))
 	
 	match current_state:
 		EnemyState.IDLE:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			# Check detection
-			if dist < detection_range:
+			# Only transition after grace period has expired
+			if grace_timer <= 0.0 and dist < detection_range:
 				if equipped_pistol and dist <= shoot_range:
 					set_state(EnemyState.ATTACK_RANGED)
 				else:
@@ -237,7 +240,7 @@ func _physics_process(delta: float) -> void:
 		EnemyState.CHASE:
 			if dist <= melee_range:
 				set_state(EnemyState.ATTACK_MELEE)
-			elif equipped_pistol and dist <= shoot_range and randf() < 0.02:
+			elif equipped_pistol and dist <= shoot_range and randf() < 0.015:
 				set_state(EnemyState.ATTACK_RANGED)
 			else:
 				var dir: Vector3 = to_player.normalized()
@@ -247,11 +250,10 @@ func _physics_process(delta: float) -> void:
 		EnemyState.ATTACK_MELEE:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			# Punch strike at 0.3s
-			if state_timer >= 0.3 and state_timer - delta < 0.3:
+			# Punch windup strike at 0.4s
+			if state_timer >= 0.4 and state_timer - delta < 0.4:
 				_perform_melee_punch()
-			# Return to chase after punch animation finishes (approx 0.8s)
-			if state_timer >= 0.85:
+			if state_timer >= 0.9:
 				if dist <= melee_range:
 					set_state(EnemyState.ATTACK_MELEE)
 				else:
@@ -260,10 +262,19 @@ func _physics_process(delta: float) -> void:
 		EnemyState.ATTACK_RANGED:
 			velocity.x = 0.0
 			velocity.z = 0.0
-			# Fire gun at 0.4s
-			if state_timer >= 0.4 and state_timer - delta < 0.4:
+			# Aim telegraph laser active for first 0.6s
+			if state_timer < 0.7:
+				if aim_telegraph:
+					aim_telegraph.visible = true
+			else:
+				if aim_telegraph:
+					aim_telegraph.visible = false
+			
+			# Fire gun at 0.75s (giving player ample time to dodge)
+			if state_timer >= 0.75 and state_timer - delta < 0.75:
 				_perform_ranged_shot()
-			if state_timer >= 1.1:
+			
+			if state_timer >= 1.4:
 				if dist > melee_range:
 					set_state(EnemyState.CHASE)
 				else:
@@ -285,7 +296,7 @@ func _perform_melee_punch() -> void:
 	SoundManager.play_whoosh()
 	if target_player and is_instance_valid(target_player):
 		var dist = global_position.distance_to(target_player.global_position)
-		if dist <= melee_range + 0.5:
+		if dist <= melee_range + 0.6:
 			SoundManager.play_hit()
 			if target_player.has_method("take_damage"):
 				target_player.take_damage(25)
@@ -293,7 +304,7 @@ func _perform_melee_punch() -> void:
 func _perform_ranged_shot() -> void:
 	if equipped_pistol and is_instance_valid(equipped_pistol):
 		if target_player and is_instance_valid(target_player):
-			var shoot_target = target_player.global_position + Vector3(0, 1.2, 0)
+			var shoot_target = target_player.global_position + Vector3(0, 1.1, 0)
 			var shoot_dir = (shoot_target - gun_slot.global_position).normalized()
 			if equipped_pistol.has_method("shoot"):
 				var shot = equipped_pistol.shoot(shoot_dir, false)
@@ -323,22 +334,20 @@ func die(hit_pos: Vector3, hit_dir: Vector3) -> void:
 	is_dead = true
 	current_state = EnemyState.DEAD
 	
-	# Drop weapon if holding one
+	if aim_telegraph:
+		aim_telegraph.visible = false
+	
 	_drop_weapon()
 	
-	# Play sound effects
 	SoundManager.play_hit()
 	SoundManager.play_shatter()
 	
-	# Spawn crystal shatter debris
 	var debris = SHATTER_SCENE.instantiate()
 	get_tree().current_scene.add_child(debris)
 	debris.global_position = global_position
 	
-	# Notify game manager
 	GameManager.on_enemy_defeated()
 	
-	# Hide enemy model and queue free
 	visible = false
 	collision_layer = 0
 	collision_mask = 0

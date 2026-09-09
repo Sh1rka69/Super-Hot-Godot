@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://b7vyuop70cwxm"]
+[gd_scene load_steps=8 format=3 uid="uid://b7vyuop70cwxm"]
 
 [ext_resource type="Script" path="res://scenes/ui/hud.gd" id="1_hud"]
 [ext_resource type="Texture2D" path="res://assets/textures/crosshair.png" id="2_cross"]
@@ -17,7 +17,29 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_normal"]
+bg_color = Color(0.9, 0.15, 0.08, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_pressed"]
+bg_color = Color(0.65, 0.08, 0.04, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_secondary"]
+bg_color = Color(0.2, 0.22, 0.28, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [node name="HUD" type="CanvasLayer"]
+process_mode = 3
 layer = 4
 script = ExtResource("1_hud")
 
@@ -54,15 +76,15 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -300.0
-offset_top = 35.0
+offset_top = 30.0
 offset_right = 300.0
-offset_bottom = 75.0
+offset_bottom = 65.0
 grow_horizontal = 2
 theme_override_colors/font_color = Color(1, 1, 1, 0.95)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.6)
 theme_override_constants/shadow_offset_x = 2
 theme_override_constants/shadow_offset_y = 2
-theme_override_font_sizes/font_size = 22
+theme_override_font_sizes/font_size = 20
 text = "TIME MOVES ONLY WHEN YOU MOVE"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -73,15 +95,36 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -120.0
-offset_top = 75.0
+offset_top = 68.0
 offset_right = 120.0
-offset_bottom = 85.0
+offset_bottom = 78.0
 grow_horizontal = 2
 mouse_filter = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_meter_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_meter_fill")
 value = 5.0
 show_percentage = false
+
+[node name="HPContainer" type="Control" parent="Control"]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 160.0
+offset_bottom = 64.0
+mouse_filter = 2
+
+[node name="HPLabel" type="Label" parent="Control/HPContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.2, 1)
+theme_override_font_sizes/font_size = 20
+text = "HP: 100"
+vertical_alignment = 1
 
 [node name="DamageVignette" type="ColorRect" parent="Control"]
 modulate = Color(1, 1, 1, 0)
@@ -110,7 +153,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.5)
+color = Color(0, 0, 0, 0.55)
 
 [node name="SuperLabel" type="Label" parent="Control/VictoryPanel"]
 layout_mode = 1
@@ -120,9 +163,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -250.0
-offset_top = -120.0
+offset_top = -140.0
 offset_right = 250.0
-offset_bottom = -20.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 0.2, 0.1, 1)
@@ -140,9 +183,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -250.0
-offset_top = -120.0
+offset_top = -140.0
 offset_right = 250.0
-offset_bottom = -20.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -151,7 +194,7 @@ text = "HOT"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RestartButton" type="Button" parent="Control/VictoryPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/VictoryPanel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -159,13 +202,27 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -110.0
-offset_top = 40.0
+offset_top = 10.0
 offset_right = 110.0
-offset_bottom = 95.0
+offset_bottom = 140.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 24
-text = "REPLAY"
+theme_override_constants/separation = 12
+
+[node name="RestartButton" type="Button" parent="Control/VictoryPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+text = "ИГРАТЬ СНОВА"
+
+[node name="MenuButton" type="Button" parent="Control/VictoryPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_secondary")
+text = "ГЛАВНОЕ МЕНЮ"
 
 [node name="DefeatPanel" type="Control" parent="Control"]
 visible = false
@@ -183,7 +240,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.2, 0, 0, 0.7)
+color = Color(0.18, 0.02, 0.02, 0.75)
 
 [node name="DiedLabel" type="Label" parent="Control/DefeatPanel"]
 layout_mode = 1
@@ -192,30 +249,44 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -80.0
-offset_right = 200.0
-offset_bottom = -10.0
+offset_left = -220.0
+offset_top = -120.0
+offset_right = 220.0
+offset_bottom = -40.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(1, 0.1, 0.1, 1)
-theme_override_font_sizes/font_size = 54
+theme_override_colors/font_color = Color(1, 0.15, 0.1, 1)
+theme_override_font_sizes/font_size = 56
 text = "DEFEATED"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="RestartButton" type="Button" parent="Control/DefeatPanel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Control/DefeatPanel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -100.0
-offset_top = 20.0
-offset_right = 100.0
-offset_bottom = 75.0
+offset_left = -110.0
+offset_top = 0.0
+offset_right = 110.0
+offset_bottom = 130.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 22
-text = "RETRY"
+theme_override_constants/separation = 12
+
+[node name="RestartButton" type="Button" parent="Control/DefeatPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_pressed")
+text = "ВОЗРОДИТЬСЯ"
+
+[node name="MenuButton" type="Button" parent="Control/DefeatPanel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_secondary")
+text = "ГЛАВНОЕ МЕНЮ"

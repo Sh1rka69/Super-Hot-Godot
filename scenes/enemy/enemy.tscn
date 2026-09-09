@@ -1,10 +1,24 @@
-[gd_scene load_steps=3 format=3 uid="uid://bvx4yq5e14kpt"]
+[gd_scene load_steps=5 format=3 uid="uid://bvx4yq5e14kpt"]
 
 [ext_resource type="Script" path="res://scenes/enemy/enemy.gd" id="1_enemy"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
 radius = 0.38
 height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_laser"]
+transparency = 1
+albedo_color = Color(1, 0.1, 0.1, 0.6)
+emission_enabled = true
+emission = Color(1, 0.1, 0.1, 1)
+emission_energy_multiplier = 3.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_laser"]
+material = SubResource("StandardMaterial3D_laser")
+top_radius = 0.008
+bottom_radius = 0.008
+height = 10.0
+radial_segments = 6
 
 [node name="Enemy" type="CharacterBody3D" groups=["enemy"]]
 collision_layer = 1
@@ -19,6 +33,11 @@ shape = SubResource("CapsuleShape3D_enemy")
 
 [node name="GunSlot" type="Marker3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 1.1, -0.4)
+
+[node name="AimTelegraph" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.28, 1.1, -5.4)
+visible = false
+mesh = SubResource("CylinderMesh_laser")
 
 [node name="LOSRayCast" type="RayCast3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)

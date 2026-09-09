@@ -1,7 +1,7 @@
 extends Node
 
 ## GameManager Autoload for "Very Hot"
-## Manages game state, time dilation (SUPERHOT mechanics), score, and game flow.
+## Handles time dilation, score, game states, settings, and level reloading.
 
 signal time_scale_changed(scale: float)
 signal enemy_killed()
@@ -9,7 +9,7 @@ signal player_damaged(current_hp: int)
 signal game_restarted()
 signal victory_achieved()
 
-enum GameState { PLAYING, PAUSED, VICTORY, GAME_OVER }
+enum GameState { MENU, PLAYING, PAUSED, VICTORY, GAME_OVER }
 
 const MIN_TIME_SCALE: float = 0.035
 const NORMAL_TIME_SCALE: float = 1.0
@@ -25,10 +25,11 @@ var total_enemies: int = 1
 var is_mobile: bool = false
 var touch_look_sensitivity: float = 0.0035
 var mouse_look_sensitivity: float = 0.002
+var sound_volume: float = 1.0
+var high_performance_mode: bool = true
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	# Detect mobile OS
 	var os_name: String = OS.get_name()
 	is_mobile = os_name == "Android" or os_name == "iOS" or DisplayServer.is_touchscreen_available()
 	Engine.time_scale = MIN_TIME_SCALE
@@ -40,18 +41,22 @@ func _process(delta: float) -> void:
 		Engine.time_scale = 0.0
 		return
 	
+	if current_state == GameState.MENU:
+		Engine.time_scale = 1.0
+		return
+	
 	if activity_timer > 0.0:
 		activity_timer -= delta / max(0.001, current_time_scale)
 		if activity_timer <= 0.0:
 			target_time_scale = MIN_TIME_SCALE
 	
-	# Smoothly interpolate time scale (using unscaled delta to be responsive)
+	# Smoothly interpolate time scale
 	var real_delta: float = delta / max(0.001, current_time_scale) if current_time_scale > 0.01 else 0.016
-	current_time_scale = lerpf(current_time_scale, target_time_scale, clampf(real_delta * 12.0, 0.0, 1.0))
+	current_time_scale = lerpf(current_time_scale, target_time_scale, clampf(real_delta * 14.0, 0.0, 1.0))
 	Engine.time_scale = clampf(current_time_scale, 0.01, SPRINT_TIME_SCALE)
 	time_scale_changed.emit(current_time_scale)
 
-func request_time_scale(activity_intensity: float, duration: float = 0.05) -> void:
+func request_time_scale(activity_intensity: float, duration: float = 0.06) -> void:
 	if current_state != GameState.PLAYING:
 		return
 	var clamped_intensity: float = clampf(activity_intensity, 0.0, 1.0)
@@ -70,14 +75,13 @@ func on_enemy_defeated() -> void:
 func trigger_victory() -> void:
 	current_state = GameState.VICTORY
 	victory_achieved.emit()
-	# Slow motion dramatic finish
 	target_time_scale = 0.2
-	activity_timer = 2.0
+	activity_timer = 3.0
 
 func trigger_game_over() -> void:
 	current_state = GameState.GAME_OVER
-	target_time_scale = 0.1
-	activity_timer = 2.0
+	target_time_scale = 0.15
+	activity_timer = 3.0
 
 func restart_game() -> void:
 	current_state = GameState.PLAYING
@@ -86,12 +90,34 @@ func restart_game() -> void:
 	current_time_scale = MIN_TIME_SCALE
 	Engine.time_scale = MIN_TIME_SCALE
 	game_restarted.emit()
-	get_tree().reload_current_scene()
+	
+	# Unpause tree if paused
+	get_tree().paused = false
+	
+	# Release mouse on mobile, capture on PC
+	if is_mobile:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	
+	get_tree().change_scene_to_file("res://scenes/main.tscn")
+
+func go_to_main_menu() -> void:
+	current_state = GameState.MENU
+	Engine.time_scale = 1.0
+	get_tree().paused = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 
 func toggle_pause() -> void:
 	if current_state == GameState.PAUSED:
 		current_state = GameState.PLAYING
+		get_tree().paused = false
 		Engine.time_scale = current_time_scale
+		if not is_mobile:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif current_state == GameState.PLAYING:
 		current_state = GameState.PAUSED
+		get_tree().paused = true
 		Engine.time_scale = 0.0
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
