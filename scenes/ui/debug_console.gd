@@ -75,7 +75,7 @@ func toggle_console() -> void:
 		_update_stats()
 
 func _log_initial_system_info() -> void:
-	var dt = Time.get_datetime_dict_from_system()
+	var dt_str = Time.get_datetime_string_from_system()
 	var os_name = OS.get_name()
 	var godot_ver = Engine.get_version_info().string
 	var video_adapter = RenderingServer.get_video_adapter_name()
@@ -85,7 +85,7 @@ func _log_initial_system_info() -> void:
 	add_log(LogType.INFO, "PROJECT: Very Hot (SUPERHOT-inspired Godot 4)")
 	add_log(LogType.INFO, "ENGINE: Godot Engine v%s" % godot_ver)
 	add_log(LogType.INFO, "PLATFORM: %s | GPU: %s" % [os_name, video_adapter])
-	add_log(LogType.INFO, "RESOLUTION: %dx%d" % [viewport_size.x, viewport_size.y])
+	add_log(LogType.INFO, "RESOLUTION: %dx%d | TIME: %s" % [viewport_size.x, viewport_size.y, dt_str])
 	add_log(LogType.INFO, "===============================================")
 
 func _run_comprehensive_diagnostics() -> void:
