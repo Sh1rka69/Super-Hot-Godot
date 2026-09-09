@@ -1,7 +1,7 @@
 extends Node
 
 ## GameManager Autoload for "Very Hot"
-## Manages game state, time dilation, audio, and persistent graphics settings.
+## Manages game state, time dilation, audio, and persistent graphics settings with guaranteed visual feedback.
 
 signal time_scale_changed(scale: float)
 signal enemy_killed()
@@ -31,10 +31,10 @@ var touch_look_sensitivity: float = 0.0035
 var mouse_look_sensitivity: float = 0.0025
 var sound_volume: float = 1.0
 
-# Graphics Settings
+# Graphics Settings (Persisted)
 var shadows_enabled: bool = true
 var ssao_enabled: bool = true
-var volumetric_rays_enabled: bool = false
+var volumetric_rays_enabled: bool = true
 var bloom_enabled: bool = true
 
 func _ready() -> void:
@@ -153,7 +153,7 @@ func load_settings() -> void:
 	if err == OK:
 		shadows_enabled = config.get_value("graphics", "shadows", true)
 		ssao_enabled = config.get_value("graphics", "ssao", true)
-		volumetric_rays_enabled = config.get_value("graphics", "volumetric_rays", false)
+		volumetric_rays_enabled = config.get_value("graphics", "volumetric_rays", true)
 		bloom_enabled = config.get_value("graphics", "bloom", true)
 		
 		touch_look_sensitivity = config.get_value("controls", "touch_sensitivity", 0.0035)
@@ -169,7 +169,8 @@ func set_graphics_param(param_name: String, value: bool) -> void:
 		"bloom": bloom_enabled = value
 	save_settings()
 
-func apply_graphics_to_current_scene(world_env: WorldEnvironment = null, dir_light: DirectionalLight3D = null) -> void:
+func apply_graphics_to_current_scene(world_env: WorldEnvironment = null, dir_light: DirectionalLight3D = null, sun_rays_node: Node3D = null) -> void:
+	# 1. World Environment
 	if world_env == null:
 		var env_nodes = get_tree().get_nodes_in_group("world_environment")
 		if env_nodes.size() > 0:
@@ -177,26 +178,38 @@ func apply_graphics_to_current_scene(world_env: WorldEnvironment = null, dir_lig
 	
 	if world_env and world_env.environment:
 		var env: Environment = world_env.environment
+		
 		# SSAO / Contact Shadows
 		env.ssao_enabled = ssao_enabled
 		if ssao_enabled:
-			env.ssao_radius = 1.2
-			env.ssao_intensity = 2.0
+			env.ssao_radius = 1.8
+			env.ssao_intensity = 4.5
+			env.ssao_power = 2.0
+			env.ssao_detail = 0.8
+			env.ambient_light_energy = 0.75
+			env.ambient_light_sky_contribution = 0.65
+		else:
+			env.ambient_light_energy = 1.15
+			env.ambient_light_sky_contribution = 1.0
 		
-		# Volumetric Light Rays (God Rays / Fog)
+		# Volumetric Fog (Engine native)
 		env.volumetric_fog_enabled = volumetric_rays_enabled
 		if volumetric_rays_enabled:
-			env.volumetric_fog_density = 0.02
-			env.volumetric_fog_albedo = Color(0.9, 0.95, 1.0)
-			env.volumetric_fog_emission_energy = 0.4
+			env.volumetric_fog_density = 0.025
+			env.volumetric_fog_albedo = Color(1.0, 0.96, 0.88)
+			env.volumetric_fog_emission_energy = 0.5
 		
 		# Bloom / Glow
 		env.glow_enabled = bloom_enabled
 		if bloom_enabled:
-			env.glow_bloom = 0.2
-			env.glow_intensity = 0.45
-			env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+			env.glow_normalized = false
+			env.glow_intensity = 0.85
+			env.glow_strength = 1.25
+			env.glow_bloom = 0.4
+			env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
+			env.glow_hdr_threshold = 0.8
 	
+	# 2. Directional Light (Sun)
 	if dir_light == null:
 		var light_nodes = get_tree().get_nodes_in_group("directional_light")
 		if light_nodes.size() > 0:
@@ -205,6 +218,15 @@ func apply_graphics_to_current_scene(world_env: WorldEnvironment = null, dir_lig
 	if dir_light:
 		dir_light.shadow_enabled = shadows_enabled
 		if volumetric_rays_enabled:
-			dir_light.light_volumetric_fog_energy = 1.8
+			dir_light.light_volumetric_fog_energy = 2.0
 		else:
 			dir_light.light_volumetric_fog_energy = 0.0
+	
+	# 3. Volumetric Sun Rays Mesh System (Visible on ALL devices)
+	if sun_rays_node == null:
+		var ray_nodes = get_tree().get_nodes_in_group("sun_rays")
+		if ray_nodes.size() > 0:
+			sun_rays_node = ray_nodes[0] as Node3D
+	
+	if sun_rays_node:
+		sun_rays_node.visible = volumetric_rays_enabled

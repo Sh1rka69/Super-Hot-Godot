@@ -58,6 +58,14 @@ func _ready() -> void:
 		_equip_initial_gun()
 	
 	set_state(EnemyState.IDLE)
+	
+	GameManager.graphics_settings_changed.connect(_update_crystal_materials)
+	_update_crystal_materials()
+
+func _update_crystal_materials() -> void:
+	if crystal_material:
+		crystal_material.emission_enabled = GameManager.bloom_enabled
+		crystal_material.emission_energy_multiplier = 0.8 if GameManager.bloom_enabled else 0.0
 
 func _create_crystal_material() -> void:
 	crystal_material = StandardMaterial3D.new()
