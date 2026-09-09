@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8yj32gkl5pm4"]
+
+[ext_resource type="Script" path="res://scenes/enemy/shatter_debris.gd" id="1_shatter"]
+
+[node name="ShatterDebris" type="Node3D"]
+script = ExtResource("1_shatter")

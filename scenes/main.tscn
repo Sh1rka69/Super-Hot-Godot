@@ -1,0 +1,26 @@
+[gd_scene load_steps=8 format=3 uid="uid://dp6yq7h3vx54m"]
+
+[ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
+[ext_resource type="PackedScene" uid="uid://c4t8nm3k2qp7s" path="res://scenes/map/test_map.tscn" id="2_map"]
+[ext_resource type="PackedScene" uid="uid://dfqm7y10t604s" path="res://scenes/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://bvx4yq5e14kpt" path="res://scenes/enemy/enemy.tscn" id="4_enemy"]
+[ext_resource type="PackedScene" uid="uid://b7vyuop70cwxm" path="res://scenes/ui/hud.tscn" id="5_hud"]
+[ext_resource type="PackedScene" uid="uid://chv6s3b1v3x44" path="res://scenes/ui/mobile_controls.tscn" id="6_mobile"]
+[ext_resource type="PackedScene" uid="uid://b1n8k4l5p3x88" path="res://scenes/ui/pause_menu.tscn" id="7_pause"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="TestMap" parent="." instance=ExtResource("2_map")]
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -2.2, 0.05, 0)
+
+[node name="Enemy" parent="." instance=ExtResource("4_enemy")]
+transform = Transform3D(4.37114e-08, 0, -1, 0, 1, 0, 1, 0, 4.37114e-08, 1.8, 0.05, 0)
+
+[node name="HUD" parent="." instance=ExtResource("5_hud")]
+
+[node name="MobileControls" parent="." instance=ExtResource("6_mobile")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("7_pause")]

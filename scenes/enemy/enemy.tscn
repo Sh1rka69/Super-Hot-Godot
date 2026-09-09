@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://bvx4yq5e14kpt"]
+
+[ext_resource type="Script" path="res://scenes/enemy/enemy.gd" id="1_enemy"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
+radius = 0.38
+height = 1.8
+
+[node name="Enemy" type="CharacterBody3D" groups=["enemy"]]
+collision_layer = 1
+collision_mask = 1
+script = ExtResource("1_enemy")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_enemy")
+
+[node name="ModelsContainer" type="Node3D" parent="."]
+
+[node name="GunSlot" type="Marker3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 1.1, -0.4)
+
+[node name="LOSRayCast" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+target_position = Vector3(0, 0, -15)
