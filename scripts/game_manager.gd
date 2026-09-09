@@ -1,7 +1,7 @@
 extends Node
 
 ## GameManager Autoload for "Very Hot"
-## Manages game state, time dilation, audio, and persistent graphics settings with guaranteed visual feedback.
+## Manages game state, time dilation, audio, and persistent graphics settings with dramatic visual feedback.
 
 signal time_scale_changed(scale: float)
 signal enemy_killed()
@@ -31,7 +31,7 @@ var touch_look_sensitivity: float = 0.0035
 var mouse_look_sensitivity: float = 0.0025
 var sound_volume: float = 1.0
 
-# Graphics Settings (Persisted)
+# Graphics Settings
 var shadows_enabled: bool = true
 var ssao_enabled: bool = true
 var volumetric_rays_enabled: bool = true
@@ -179,35 +179,38 @@ func apply_graphics_to_current_scene(world_env: WorldEnvironment = null, dir_lig
 	if world_env and world_env.environment:
 		var env: Environment = world_env.environment
 		
-		# SSAO / Contact Shadows
+		# SSAO & Angular Contact Shading
 		env.ssao_enabled = ssao_enabled
 		if ssao_enabled:
-			env.ssao_radius = 1.8
-			env.ssao_intensity = 4.5
-			env.ssao_power = 2.0
-			env.ssao_detail = 0.8
-			env.ambient_light_energy = 0.75
-			env.ambient_light_sky_contribution = 0.65
+			env.ssao_radius = 2.5
+			env.ssao_intensity = 6.0
+			env.ssao_power = 2.5
+			env.ssao_detail = 1.0
+			env.ambient_light_color = Color(0.65, 0.7, 0.8)
+			env.ambient_light_energy = 0.65
+			env.ambient_light_sky_contribution = 0.55
 		else:
-			env.ambient_light_energy = 1.15
+			env.ambient_light_color = Color(0.95, 0.95, 1.0)
+			env.ambient_light_energy = 1.35
 			env.ambient_light_sky_contribution = 1.0
 		
-		# Volumetric Fog (Engine native)
+		# Volumetric Fog
 		env.volumetric_fog_enabled = volumetric_rays_enabled
 		if volumetric_rays_enabled:
-			env.volumetric_fog_density = 0.025
-			env.volumetric_fog_albedo = Color(1.0, 0.96, 0.88)
-			env.volumetric_fog_emission_energy = 0.5
+			env.volumetric_fog_density = 0.03
+			env.volumetric_fog_albedo = Color(1.0, 0.95, 0.85)
+			env.volumetric_fog_emission_energy = 0.6
 		
-		# Bloom / Glow
+		# Bloom & Glow
 		env.glow_enabled = bloom_enabled
 		if bloom_enabled:
 			env.glow_normalized = false
-			env.glow_intensity = 0.85
-			env.glow_strength = 1.25
-			env.glow_bloom = 0.4
+			env.glow_intensity = 1.1
+			env.glow_strength = 1.35
+			env.glow_bloom = 0.5
 			env.glow_blend_mode = Environment.GLOW_BLEND_MODE_ADDITIVE
-			env.glow_hdr_threshold = 0.8
+			env.glow_hdr_threshold = 0.6
+			env.glow_hdr_scale = 2.0
 	
 	# 2. Directional Light (Sun)
 	if dir_light == null:
@@ -218,11 +221,11 @@ func apply_graphics_to_current_scene(world_env: WorldEnvironment = null, dir_lig
 	if dir_light:
 		dir_light.shadow_enabled = shadows_enabled
 		if volumetric_rays_enabled:
-			dir_light.light_volumetric_fog_energy = 2.0
+			dir_light.light_volumetric_fog_energy = 2.5
 		else:
 			dir_light.light_volumetric_fog_energy = 0.0
 	
-	# 3. Volumetric Sun Rays Mesh System (Visible on ALL devices)
+	# 3. Volumetric Sun Rays Mesh System (100% visible on all devices)
 	if sun_rays_node == null:
 		var ray_nodes = get_tree().get_nodes_in_group("sun_rays")
 		if ray_nodes.size() > 0:

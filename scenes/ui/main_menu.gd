@@ -1,25 +1,32 @@
 extends Control
 
 ## Main Menu for "Very Hot"
-## Includes persistent graphics settings (Shadows, SSAO, Volumetric Rays, Bloom).
+## Features interactive live 3D background with instant visual feedback for graphics settings.
 
-@onready var btn_play = $CenterContainer/VBoxContainer/PlayButton
-@onready var btn_settings = $CenterContainer/VBoxContainer/SettingsButton
-@onready var btn_controls = $CenterContainer/VBoxContainer/ControlsButton
-@onready var btn_quit = $CenterContainer/VBoxContainer/QuitButton
+@onready var btn_play = $UI/CenterContainer/VBoxContainer/PlayButton
+@onready var btn_settings = $UI/CenterContainer/VBoxContainer/SettingsButton
+@onready var btn_controls = $UI/CenterContainer/VBoxContainer/ControlsButton
+@onready var btn_quit = $UI/CenterContainer/VBoxContainer/QuitButton
 
-@onready var settings_modal = $SettingsModal
-@onready var btn_close_settings = $SettingsModal/Panel/VBoxContainer/CloseSettingsButton
-@onready var sens_slider = $SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/SensContainer/HSlider
-@onready var vol_slider = $SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/VolContainer/HSlider
+@onready var settings_modal = $UI/SettingsModal
+@onready var btn_close_settings = $UI/SettingsModal/Panel/VBoxContainer/CloseSettingsButton
+@onready var sens_slider = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/SensContainer/HSlider
+@onready var vol_slider = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/VolContainer/HSlider
 
-@onready var check_shadows = $SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckShadows
-@onready var check_ssao = $SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckSSAO
-@onready var check_rays = $SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckRays
-@onready var check_bloom = $SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckBloom
+@onready var check_shadows = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckShadows
+@onready var check_ssao = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckSSAO
+@onready var check_rays = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckRays
+@onready var check_bloom = $UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox/CheckBloom
 
-@onready var controls_modal = $ControlsModal
-@onready var btn_close_controls = $ControlsModal/Panel/VBoxContainer/CloseControlsButton
+@onready var controls_modal = $UI/ControlsModal
+@onready var btn_close_controls = $UI/ControlsModal/Panel/VBoxContainer/CloseControlsButton
+
+@onready var menu_cam = $Menu3D/CameraPivot/Camera3D
+@onready var cam_pivot = $Menu3D/CameraPivot
+@onready var world_env = $Menu3D/WorldEnvironment
+@onready var dir_light = $Menu3D/DirectionalLight3D
+@onready var sun_rays = $Menu3D/SunRays
+@onready var preview_enemy = $Menu3D/PreviewEnemy
 
 func _ready() -> void:
 	Engine.time_scale = 1.0
@@ -40,6 +47,17 @@ func _ready() -> void:
 	btn_close_controls.pressed.connect(func(): controls_modal.visible = false)
 	
 	_init_settings_ui()
+	GameManager.apply_graphics_to_current_scene(world_env, dir_light, sun_rays)
+	GameManager.graphics_settings_changed.connect(_on_graphics_changed)
+
+func _process(delta: float) -> void:
+	if cam_pivot:
+		cam_pivot.rotate_y(delta * 0.1)
+
+func _on_graphics_changed() -> void:
+	GameManager.apply_graphics_to_current_scene(world_env, dir_light, sun_rays)
+	if preview_enemy and preview_enemy.has_method("_update_crystal_materials"):
+		preview_enemy._update_crystal_materials()
 
 func _init_settings_ui() -> void:
 	if sens_slider:

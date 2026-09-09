@@ -1,9 +1,65 @@
-[gd_scene load_steps=7 format=3 uid="uid://cxv81p32k98vy"]
+[gd_scene load_steps=18 format=3 uid="uid://cxv81p32k98vy"]
 
 [ext_resource type="Script" path="res://scenes/ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/textures/Skybox_Day.jpg" id="2_sky"]
+[ext_resource type="PackedScene" uid="uid://bvx4yq5e14kpt" path="res://scenes/enemy/enemy.tscn" id="3_enemy"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
-bg_color = Color(0.06, 0.07, 0.09, 1)
+[sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_1"]
+panorama = ExtResource("2_sky")
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("PanoramaSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+ambient_light_source = 3
+ambient_light_color = Color(0.65, 0.7, 0.8, 1)
+ambient_light_sky_contribution = 0.55
+ambient_light_energy = 0.65
+tonemap_mode = 3
+ssao_enabled = true
+ssao_radius = 2.5
+ssao_intensity = 6.0
+glow_enabled = true
+glow_intensity = 1.1
+glow_strength = 1.35
+glow_bloom = 0.5
+glow_blend_mode = 0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.92, 0.93, 0.95, 1)
+roughness = 0.35
+metallic = 0.05
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+material = SubResource("StandardMaterial3D_floor")
+size = Vector3(16, 0.2, 16)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_color = Color(0.85, 0.86, 0.88, 1)
+roughness = 0.45
+metallic = 0.02
+
+[sub_resource type="BoxMesh" id="BoxMesh_pillar"]
+material = SubResource("StandardMaterial3D_wall")
+size = Vector3(1, 4, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sunray"]
+transparency = 1
+blend_mode = 1
+cull_mode = 2
+albedo_color = Color(1, 0.95, 0.8, 0.35)
+emission_enabled = true
+emission = Color(1, 0.95, 0.8, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ray"]
+material = SubResource("StandardMaterial3D_sunray")
+top_radius = 0.2
+bottom_radius = 2.0
+height = 10.0
+radial_segments = 12
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_play"]
 bg_color = Color(0.95, 0.2, 0.1, 1)
@@ -20,19 +76,24 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_sec"]
-bg_color = Color(0.15, 0.17, 0.22, 0.9)
+bg_color = Color(0.12, 0.14, 0.18, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.35, 0.45, 0.6)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
-bg_color = Color(0.1, 0.11, 0.15, 0.95)
+bg_color = Color(0.08, 0.09, 0.12, 0.96)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.9, 0.2, 0.1, 0.7)
+border_color = Color(0.9, 0.2, 0.1, 0.8)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -47,16 +108,55 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="Background" type="Panel" parent="."]
+[node name="Menu3D" type="Node3D" parent="."]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Menu3D" groups=["world_environment"]]
+environment = SubResource("Environment_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Menu3D" groups=["directional_light"]]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 8, 0)
+light_color = Color(1, 0.98, 0.94, 1)
+light_energy = 1.3
+shadow_enabled = true
+
+[node name="SunRays" type="Node3D" parent="Menu3D" groups=["sun_rays"]]
+
+[node name="RayBeam1" type="MeshInstance3D" parent="Menu3D/SunRays"]
+transform = Transform3D(0.866025, 0.353553, -0.353553, 0, 0.707107, 0.707107, 0.5, -0.612372, 0.612372, 0, 3.5, 0)
+mesh = SubResource("CylinderMesh_ray")
+
+[node name="Floor" type="MeshInstance3D" parent="Menu3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+mesh = SubResource("BoxMesh_floor")
+
+[node name="Pillar1" type="MeshInstance3D" parent="Menu3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 2, -2)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="Pillar2" type="MeshInstance3D" parent="Menu3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2, -2)
+mesh = SubResource("BoxMesh_pillar")
+
+[node name="PreviewEnemy" parent="Menu3D" instance=ExtResource("3_enemy")]
+transform = Transform3D(-0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, -0.866025, 0, 0, 0)
+
+[node name="CameraPivot" type="Node3D" parent="Menu3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Menu3D/CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.4, 4.2)
+current = true
+fov = 68.0
+
+[node name="UI" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="UI"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -64,32 +164,35 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/CenterContainer"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="Title" type="Label" parent="UI/CenterContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.2, 0.1, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
 theme_override_constants/shadow_offset_x = 3
 theme_override_constants/shadow_offset_y = 3
 theme_override_font_sizes/font_size = 64
 text = "VERY HOT"
 horizontal_alignment = 1
 
-[node name="Subtitle" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="Subtitle" type="Label" parent="UI/CenterContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.82, 0.88, 1)
+theme_override_colors/font_color = Color(0.9, 0.92, 0.96, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.7)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
 theme_override_font_sizes/font_size = 16
 text = "TIME MOVES ONLY WHEN YOU MOVE"
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 20)
+[node name="Spacer" type="Control" parent="UI/CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 16)
 layout_mode = 2
 
-[node name="PlayButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="PlayButton" type="Button" parent="UI/CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(280, 56)
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
@@ -97,28 +200,28 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_btn_play")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_play_pressed")
 text = "ИГРАТЬ"
 
-[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="SettingsButton" type="Button" parent="UI/CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_sec")
 text = "НАСТРОЙКИ"
 
-[node name="ControlsButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="ControlsButton" type="Button" parent="UI/CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_sec")
 text = "УПРАВЛЕНИЕ"
 
-[node name="QuitButton" type="Button" parent="CenterContainer/VBoxContainer"]
+[node name="QuitButton" type="Button" parent="UI/CenterContainer/VBoxContainer"]
 custom_minimum_size = Vector2(280, 48)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_sec")
 text = "ВЫХОД"
 
-[node name="SettingsModal" type="Control" parent="."]
+[node name="SettingsModal" type="Control" parent="UI"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -127,16 +230,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Overlay" type="ColorRect" parent="SettingsModal"]
+[node name="Overlay" type="ColorRect" parent="UI/SettingsModal"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0, 0.45)
 
-[node name="Panel" type="Panel" parent="SettingsModal"]
+[node name="Panel" type="Panel" parent="UI/SettingsModal"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -151,7 +254,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="SettingsModal/Panel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/SettingsModal/Panel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -164,100 +267,101 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="SettingsModal/Panel/VBoxContainer"]
+[node name="Title" type="Label" parent="UI/SettingsModal/Panel/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.3, 0.2, 1)
 theme_override_font_sizes/font_size = 22
 text = "НАСТРОЙКИ"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="SettingsModal/Panel/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/SettingsModal/Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="VBox" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer"]
+[node name="VBox" type="VBoxContainer" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 12
 
-[node name="GraphicsLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
+[node name="GraphicsLabel" type="Label" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
 theme_override_font_sizes/font_size = 15
 text = "🎨 Настройки графики:"
 
-[node name="GraphicsBox" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
+[node name="GraphicsBox" type="VBoxContainer" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="CheckShadows" type="CheckButton" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
+[node name="CheckShadows" type="CheckButton" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 button_pressed = true
 text = "Тени (Shadows)"
 
-[node name="CheckSSAO" type="CheckButton" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
+[node name="CheckSSAO" type="CheckButton" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 button_pressed = true
 text = "Угловые тени (SSAO)"
 
-[node name="CheckRays" type="CheckButton" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
+[node name="CheckRays" type="CheckButton" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
+button_pressed = true
 text = "Объёмные лучи (Volumetric Rays)"
 
-[node name="CheckBloom" type="CheckButton" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
+[node name="CheckBloom" type="CheckButton" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 button_pressed = true
 text = "Блум / Свечение (Bloom & Glow)"
 
-[node name="ControlsLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
+[node name="ControlsLabel" type="Label" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
 theme_override_font_sizes/font_size = 15
 text = "🎮 Управление и звук:"
 
-[node name="SensContainer" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
+[node name="SensContainer" type="VBoxContainer" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
 layout_mode = 2
 
-[node name="SensLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/SensContainer"]
+[node name="SensLabel" type="Label" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/SensContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Чувствительность взгляда"
 
-[node name="HSlider" type="HSlider" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/SensContainer"]
+[node name="HSlider" type="HSlider" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/SensContainer"]
 layout_mode = 2
 min_value = 1.0
 max_value = 10.0
 step = 0.5
 value = 3.5
 
-[node name="VolContainer" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
+[node name="VolContainer" type="VBoxContainer" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
 layout_mode = 2
 
-[node name="VolLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/VolContainer"]
+[node name="VolLabel" type="Label" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/VolContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 text = "Громкость звуков"
 
-[node name="HSlider" type="HSlider" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/VolContainer"]
+[node name="HSlider" type="HSlider" parent="UI/SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/VolContainer"]
 layout_mode = 2
 min_value = 0.0
 max_value = 100.0
 step = 5.0
 value = 100.0
 
-[node name="CloseSettingsButton" type="Button" parent="SettingsModal/Panel/VBoxContainer"]
+[node name="CloseSettingsButton" type="Button" parent="UI/SettingsModal/Panel/VBoxContainer"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_play")
 text = "СОХРАНИТЬ И ЗАКРЫТЬ"
 
-[node name="ControlsModal" type="Control" parent="."]
+[node name="ControlsModal" type="Control" parent="UI"]
 visible = false
 layout_mode = 1
 anchors_preset = 15
@@ -266,7 +370,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Overlay" type="ColorRect" parent="ControlsModal"]
+[node name="Overlay" type="ColorRect" parent="UI/ControlsModal"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -275,7 +379,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.6)
 
-[node name="Panel" type="Panel" parent="ControlsModal"]
+[node name="Panel" type="Panel" parent="UI/ControlsModal"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -290,7 +394,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="ControlsModal/Panel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/ControlsModal/Panel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -303,14 +407,14 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
 
-[node name="Title" type="Label" parent="ControlsModal/Panel/VBoxContainer"]
+[node name="Title" type="Label" parent="UI/ControlsModal/Panel/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.3, 0.2, 1)
 theme_override_font_sizes/font_size = 22
 text = "УПРАВЛЕНИЕ"
 horizontal_alignment = 1
 
-[node name="ControlsInfo" type="RichTextLabel" parent="ControlsModal/Panel/VBoxContainer"]
+[node name="ControlsInfo" type="RichTextLabel" parent="UI/ControlsModal/Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_font_sizes/normal_font_size = 13
@@ -325,7 +429,7 @@ text = "[color=#ff5533]📱 Мобильные устройства (Android):[/
 • [b]WASD[/b] — движение | [b]Shift[/b] — бег | [b]Space[/b] — прыжок | [b]C[/b] — присед
 • [b]Мышь[/b] — осмотр | [b]ЛКМ/F[/b] — удар/выстрел | [b]ПКМ[/b] — бросок | [b]E[/b] — подбор"
 
-[node name="CloseControlsButton" type="Button" parent="ControlsModal/Panel/VBoxContainer"]
+[node name="CloseControlsButton" type="Button" parent="UI/ControlsModal/Panel/VBoxContainer"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16

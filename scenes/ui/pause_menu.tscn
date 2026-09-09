@@ -48,7 +48,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.6)
+color = Color(0, 0, 0, 0.35)
 
 [node name="Panel" type="Panel" parent="Control"]
 layout_mode = 1
@@ -131,6 +131,7 @@ text = "Угловые тени (SSAO)"
 [node name="CheckRays" type="CheckButton" parent="Control/Panel/VBoxContainer/GraphicsBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
+button_pressed = true
 text = "Объёмные лучи (Rays)"
 
 [node name="CheckBloom" type="CheckButton" parent="Control/Panel/VBoxContainer/GraphicsBox"]
