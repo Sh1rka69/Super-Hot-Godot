@@ -1,22 +1,36 @@
-[gd_scene load_steps=3 format=3 uid="uid://b1n8k4l5p3x88"]
+[gd_scene load_steps=5 format=3 uid="uid://b1n8k4l5p3x88"]
 
 [ext_resource type="Script" path="res://scenes/ui/pause_menu.gd" id="1_pause"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.08, 0.08, 0.1, 0.92)
+bg_color = Color(0.08, 0.08, 0.1, 0.95)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(1, 0.3, 0.1, 0.8)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_primary"]
+bg_color = Color(0.9, 0.2, 0.1, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_sec"]
+bg_color = Color(0.18, 0.2, 0.25, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="PauseMenu" type="CanvasLayer"]
 process_mode = 3
-layer = 10
+layer = 20
 script = ExtResource("1_pause")
 
 [node name="Control" type="Control" parent="."]
@@ -43,10 +57,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -175.0
-offset_top = -160.0
-offset_right = 175.0
-offset_bottom = 160.0
+offset_left = -220.0
+offset_top = -250.0
+offset_right = 220.0
+offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
@@ -56,40 +70,82 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 25.0
-offset_top = 25.0
-offset_right = -25.0
-offset_bottom = -25.0
+offset_left = 22.0
+offset_top = 18.0
+offset_right = -22.0
+offset_bottom = -18.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="Control/Panel/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.3, 0.1, 1)
-theme_override_font_sizes/font_size = 28
-text = "PAUSED"
+theme_override_font_sizes/font_size = 24
+text = "ПАУЗА"
 horizontal_alignment = 1
 
 [node name="ResumeButton" type="Button" parent="Control/Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "RESUME"
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_primary")
+text = "ПРОДОЛЖИТЬ"
 
 [node name="RestartButton" type="Button" parent="Control/Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 44)
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "RESTART"
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_sec")
+text = "ЗАНОВО"
+
+[node name="MenuButton" type="Button" parent="Control/Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_sec")
+text = "ГЛАВНОЕ МЕНЮ"
+
+[node name="GraphicsLabel" type="Label" parent="Control/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.65, 0.2, 1)
+theme_override_font_sizes/font_size = 14
+text = "Настройки графики:"
+
+[node name="GraphicsBox" type="VBoxContainer" parent="Control/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="CheckShadows" type="CheckButton" parent="Control/Panel/VBoxContainer/GraphicsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+button_pressed = true
+text = "Тени (Shadows)"
+
+[node name="CheckSSAO" type="CheckButton" parent="Control/Panel/VBoxContainer/GraphicsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+button_pressed = true
+text = "Угловые тени (SSAO)"
+
+[node name="CheckRays" type="CheckButton" parent="Control/Panel/VBoxContainer/GraphicsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Объёмные лучи (Rays)"
+
+[node name="CheckBloom" type="CheckButton" parent="Control/Panel/VBoxContainer/GraphicsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+button_pressed = true
+text = "Блум (Bloom & Glow)"
 
 [node name="SensContainer" type="VBoxContainer" parent="Control/Panel/VBoxContainer"]
 layout_mode = 2
 
 [node name="SensLabel" type="Label" parent="Control/Panel/VBoxContainer/SensContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
-text = "Look Sensitivity"
+theme_override_font_sizes/font_size = 12
+text = "Чувствительность взгляда"
 
 [node name="HSlider" type="HSlider" parent="Control/Panel/VBoxContainer/SensContainer"]
 layout_mode = 2

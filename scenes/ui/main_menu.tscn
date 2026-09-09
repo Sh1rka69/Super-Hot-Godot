@@ -143,10 +143,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -180.0
-offset_top = -160.0
-offset_right = 180.0
-offset_bottom = 160.0
+offset_left = -220.0
+offset_top = -240.0
+offset_right = 220.0
+offset_bottom = 240.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
@@ -156,45 +156,94 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = -24.0
-offset_bottom = -24.0
+offset_left = 20.0
+offset_top = 16.0
+offset_right = -20.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="SettingsModal/Panel/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.3, 0.2, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 22
 text = "НАСТРОЙКИ"
 horizontal_alignment = 1
 
-[node name="SensContainer" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer"]
+[node name="ScrollContainer" type="ScrollContainer" parent="SettingsModal/Panel/VBoxContainer"]
 layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="SensLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/SensContainer"]
+[node name="VBox" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+[node name="GraphicsLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 15
+text = "🎨 Настройки графики:"
+
+[node name="GraphicsBox" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CheckShadows" type="CheckButton" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
+button_pressed = true
+text = "Тени (Shadows)"
+
+[node name="CheckSSAO" type="CheckButton" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+button_pressed = true
+text = "Угловые тени (SSAO)"
+
+[node name="CheckRays" type="CheckButton" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Объёмные лучи (Volumetric Rays)"
+
+[node name="CheckBloom" type="CheckButton" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/GraphicsBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+button_pressed = true
+text = "Блум / Свечение (Bloom & Glow)"
+
+[node name="ControlsLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0.2, 1)
+theme_override_font_sizes/font_size = 15
+text = "🎮 Управление и звук:"
+
+[node name="SensContainer" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
+layout_mode = 2
+
+[node name="SensLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/SensContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
 text = "Чувствительность взгляда"
 
-[node name="HSlider" type="HSlider" parent="SettingsModal/Panel/VBoxContainer/SensContainer"]
+[node name="HSlider" type="HSlider" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/SensContainer"]
 layout_mode = 2
 min_value = 1.0
 max_value = 10.0
 step = 0.5
 value = 3.5
 
-[node name="VolContainer" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer"]
+[node name="VolContainer" type="VBoxContainer" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox"]
 layout_mode = 2
 
-[node name="VolLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/VolContainer"]
+[node name="VolLabel" type="Label" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/VolContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 13
 text = "Громкость звуков"
 
-[node name="HSlider" type="HSlider" parent="SettingsModal/Panel/VBoxContainer/VolContainer"]
+[node name="HSlider" type="HSlider" parent="SettingsModal/Panel/VBoxContainer/ScrollContainer/VBox/VolContainer"]
 layout_mode = 2
 min_value = 0.0
 max_value = 100.0
@@ -206,7 +255,7 @@ custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 theme_override_styles/normal = SubResource("StyleBoxFlat_btn_play")
-text = "ЗАКРЫТЬ"
+text = "СОХРАНИТЬ И ЗАКРЫТЬ"
 
 [node name="ControlsModal" type="Control" parent="."]
 visible = false

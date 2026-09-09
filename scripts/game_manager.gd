@@ -1,19 +1,21 @@
 extends Node
 
 ## GameManager Autoload for "Very Hot"
-## Handles time dilation, score, game states, settings, and level reloading.
+## Manages game state, time dilation, audio, and persistent graphics settings.
 
 signal time_scale_changed(scale: float)
 signal enemy_killed()
 signal player_damaged(current_hp: int)
 signal game_restarted()
 signal victory_achieved()
+signal graphics_settings_changed()
 
 enum GameState { MENU, PLAYING, PAUSED, VICTORY, GAME_OVER }
 
 const MIN_TIME_SCALE: float = 0.035
 const NORMAL_TIME_SCALE: float = 1.0
 const SPRINT_TIME_SCALE: float = 1.25
+const SETTINGS_FILE_PATH: String = "user://settings.cfg"
 
 var current_state: GameState = GameState.PLAYING
 var target_time_scale: float = MIN_TIME_SCALE
@@ -23,10 +25,17 @@ var activity_timer: float = 0.0
 var enemies_killed_count: int = 0
 var total_enemies: int = 1
 var is_mobile: bool = false
+
+# Persistent Settings
 var touch_look_sensitivity: float = 0.0035
-var mouse_look_sensitivity: float = 0.002
+var mouse_look_sensitivity: float = 0.0025
 var sound_volume: float = 1.0
-var high_performance_mode: bool = true
+
+# Graphics Settings
+var shadows_enabled: bool = true
+var ssao_enabled: bool = true
+var volumetric_rays_enabled: bool = false
+var bloom_enabled: bool = true
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -35,6 +44,8 @@ func _ready() -> void:
 	Engine.time_scale = MIN_TIME_SCALE
 	current_time_scale = MIN_TIME_SCALE
 	target_time_scale = MIN_TIME_SCALE
+	
+	load_settings()
 
 func _process(delta: float) -> void:
 	if current_state == GameState.PAUSED:
@@ -50,7 +61,6 @@ func _process(delta: float) -> void:
 		if activity_timer <= 0.0:
 			target_time_scale = MIN_TIME_SCALE
 	
-	# Smoothly interpolate time scale
 	var real_delta: float = delta / max(0.001, current_time_scale) if current_time_scale > 0.01 else 0.016
 	current_time_scale = lerpf(current_time_scale, target_time_scale, clampf(real_delta * 14.0, 0.0, 1.0))
 	Engine.time_scale = clampf(current_time_scale, 0.01, SPRINT_TIME_SCALE)
@@ -90,11 +100,8 @@ func restart_game() -> void:
 	current_time_scale = MIN_TIME_SCALE
 	Engine.time_scale = MIN_TIME_SCALE
 	game_restarted.emit()
-	
-	# Unpause tree if paused
 	get_tree().paused = false
 	
-	# Release mouse on mobile, capture on PC
 	if is_mobile:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	else:
@@ -121,3 +128,83 @@ func toggle_pause() -> void:
 		get_tree().paused = true
 		Engine.time_scale = 0.0
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+# ==========================================
+# Persistent Settings Management (Auto-Save)
+# ==========================================
+
+func save_settings() -> void:
+	var config = ConfigFile.new()
+	config.set_value("graphics", "shadows", shadows_enabled)
+	config.set_value("graphics", "ssao", ssao_enabled)
+	config.set_value("graphics", "volumetric_rays", volumetric_rays_enabled)
+	config.set_value("graphics", "bloom", bloom_enabled)
+	
+	config.set_value("controls", "touch_sensitivity", touch_look_sensitivity)
+	config.set_value("audio", "volume", sound_volume)
+	
+	config.save(SETTINGS_FILE_PATH)
+	graphics_settings_changed.emit()
+	apply_graphics_to_current_scene()
+
+func load_settings() -> void:
+	var config = ConfigFile.new()
+	var err = config.load(SETTINGS_FILE_PATH)
+	if err == OK:
+		shadows_enabled = config.get_value("graphics", "shadows", true)
+		ssao_enabled = config.get_value("graphics", "ssao", true)
+		volumetric_rays_enabled = config.get_value("graphics", "volumetric_rays", false)
+		bloom_enabled = config.get_value("graphics", "bloom", true)
+		
+		touch_look_sensitivity = config.get_value("controls", "touch_sensitivity", 0.0035)
+		sound_volume = config.get_value("audio", "volume", 1.0)
+	
+	AudioServer.set_bus_volume_db(0, linear_to_db(sound_volume))
+
+func set_graphics_param(param_name: String, value: bool) -> void:
+	match param_name:
+		"shadows": shadows_enabled = value
+		"ssao": ssao_enabled = value
+		"volumetric_rays": volumetric_rays_enabled = value
+		"bloom": bloom_enabled = value
+	save_settings()
+
+func apply_graphics_to_current_scene(world_env: WorldEnvironment = null, dir_light: DirectionalLight3D = null) -> void:
+	if world_env == null:
+		var env_nodes = get_tree().get_nodes_in_group("world_environment")
+		if env_nodes.size() > 0:
+			world_env = env_nodes[0] as WorldEnvironment
+	
+	if world_env and world_env.environment:
+		var env: Environment = world_env.environment
+		# SSAO / Contact Shadows
+		env.ssao_enabled = ssao_enabled
+		if ssao_enabled:
+			env.ssao_radius = 1.2
+			env.ssao_intensity = 2.0
+		
+		# Volumetric Light Rays (God Rays / Fog)
+		env.volumetric_fog_enabled = volumetric_rays_enabled
+		if volumetric_rays_enabled:
+			env.volumetric_fog_density = 0.02
+			env.volumetric_fog_albedo = Color(0.9, 0.95, 1.0)
+			env.volumetric_fog_emission_energy = 0.4
+		
+		# Bloom / Glow
+		env.glow_enabled = bloom_enabled
+		if bloom_enabled:
+			env.glow_bloom = 0.2
+			env.glow_intensity = 0.45
+			env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+	
+	if dir_light == null:
+		var light_nodes = get_tree().get_nodes_in_group("directional_light")
+		if light_nodes.size() > 0:
+			dir_light = light_nodes[0] as DirectionalLight3D
+	
+	if dir_light:
+		dir_light.shadow_enabled = shadows_enabled
+		if volumetric_rays_enabled:
+			dir_light.light_volumetric_fog_energy = 1.8
+		else:
+			dir_light.light_volumetric_fog_energy = 0.0

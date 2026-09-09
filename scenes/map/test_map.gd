@@ -1,13 +1,15 @@
 extends Node3D
 
 ## TestMap Scene for "Very Hot"
-## Lightweight, high performance map setup with clean minimalist materials.
+## Lightweight, high performance map setup with clean minimalist materials and real-time graphics settings.
 
 const MAP_GLTF_SCENE: PackedScene = preload("res://assets/models/map/VH_TestMap.gltf")
 
 @onready var map_container: Node3D = $MapContainer
 @onready var player_spawn: Marker3D = $PlayerSpawn
 @onready var enemy_spawn: Marker3D = $EnemySpawn
+@onready var world_env: WorldEnvironment = $WorldEnvironment
+@onready var dir_light: DirectionalLight3D = $DirectionalLight3D
 
 var floor_material: StandardMaterial3D
 var wall_material: StandardMaterial3D
@@ -15,6 +17,11 @@ var wall_material: StandardMaterial3D
 func _ready() -> void:
 	_create_materials()
 	_instance_map()
+	GameManager.apply_graphics_to_current_scene(world_env, dir_light)
+	GameManager.graphics_settings_changed.connect(_on_graphics_changed)
+
+func _on_graphics_changed() -> void:
+	GameManager.apply_graphics_to_current_scene(world_env, dir_light)
 
 func _create_materials() -> void:
 	floor_material = StandardMaterial3D.new()
