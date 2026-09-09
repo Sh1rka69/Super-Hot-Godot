@@ -1,0 +1,249 @@
+[gd_scene load_steps=10 format=3 uid="uid://dmv79q31b5px8"]
+
+[ext_resource type="Script" path="res://scenes/ui/debug_console.gd" id="1_console"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_toggle"]
+bg_color = Color(0.12, 0.14, 0.18, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.3, 0.7, 1, 0.7)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_window"]
+bg_color = Color(0.08, 0.09, 0.12, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.6, 0.9, 0.8)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_copy"]
+bg_color = Color(0.15, 0.55, 0.25, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_action"]
+bg_color = Color(0.18, 0.22, 0.28, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_close"]
+bg_color = Color(0.7, 0.15, 0.15, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_log_box"]
+bg_color = Color(0.04, 0.05, 0.07, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.2, 0.25, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_toast"]
+bg_color = Color(0.1, 0.75, 0.35, 0.95)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="DebugConsole" type="CanvasLayer"]
+process_mode = 3
+layer = 100
+script = ExtResource("1_console")
+
+[node name="ToggleContainer" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 146.0
+offset_bottom = 54.0
+
+[node name="ConsoleButton" type="Button" parent="ToggleContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.4, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_toggle")
+text = "📟 КОНСОЛЬ"
+
+[node name="ConsoleWindow" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="ConsoleWindow"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Panel" type="Panel" parent="ConsoleWindow"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -580.0
+offset_top = -320.0
+offset_right = 580.0
+offset_bottom = 320.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_window")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ConsoleWindow/Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 14.0
+offset_right = -16.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="TopBar" type="HBoxContainer" parent="ConsoleWindow/Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="ConsoleWindow/Panel/VBoxContainer/TopBar"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "🛠️ КОНСОЛЬ И ДИАГНОСТИКА ОШИБОК"
+
+[node name="StatsLabel" type="Label" parent="ConsoleWindow/Panel/VBoxContainer/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.7, 0.75, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "Ошибок: 0 | Предупреждений: 0 | FPS: 60"
+horizontal_alignment = 2
+
+[node name="CloseButton" type="Button" parent="ConsoleWindow/Panel/VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(36, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_close")
+text = "✕"
+
+[node name="FilterBar" type="HBoxContainer" parent="ConsoleWindow/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnAll" type="Button" parent="ConsoleWindow/Panel/VBoxContainer/FilterBar"]
+custom_minimum_size = Vector2(100, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
+text = "Все логи"
+
+[node name="BtnErrors" type="Button" parent="ConsoleWindow/Panel/VBoxContainer/FilterBar"]
+custom_minimum_size = Vector2(130, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
+text = "🔴 Ошибки"
+
+[node name="BtnWarnings" type="Button" parent="ConsoleWindow/Panel/VBoxContainer/FilterBar"]
+custom_minimum_size = Vector2(140, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
+text = "🟡 Предупреждения"
+
+[node name="BtnDiag" type="Button" parent="ConsoleWindow/Panel/VBoxContainer/FilterBar"]
+custom_minimum_size = Vector2(130, 32)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
+text = "🟢 Диагностика"
+
+[node name="LogDisplay" type="RichTextLabel" parent="ConsoleWindow/Panel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 12
+theme_override_styles/normal = SubResource("StyleBoxFlat_log_box")
+bbcode_enabled = true
+scroll_following = true
+selection_enabled = true
+
+[node name="BottomBar" type="HBoxContainer" parent="ConsoleWindow/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="CopyButton" type="Button" parent="ConsoleWindow/Panel/VBoxContainer/BottomBar"]
+custom_minimum_size = Vector2(320, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_copy")
+text = "📋 СКОПИРОВАТЬ ВСЁ В БУФЕР ОБМЕНА"
+
+[node name="DiagnoseButton" type="Button" parent="ConsoleWindow/Panel/VBoxContainer/BottomBar"]
+custom_minimum_size = Vector2(220, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
+text = "🔍 ПЕРЕПРОВЕРИТЬ ПРОЕКТ"
+
+[node name="ClearButton" type="Button" parent="ConsoleWindow/Panel/VBoxContainer/BottomBar"]
+custom_minimum_size = Vector2(120, 44)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_btn_action")
+text = "🗑 ОЧИСТИТЬ"
+
+[node name="StatusToast" type="Label" parent="ConsoleWindow/Panel"]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -230.0
+offset_top = -90.0
+offset_right = 230.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_toast")
+text = "📋 Все ошибки скопированы в буфер обмена!"
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -14,6 +14,7 @@ config/icon="res://assets/ui/run.png"
 
 [autoload]
 
+DebugConsole="*res://scenes/ui/debug_console.tscn"
 GameManager="*res://scripts/game_manager.gd"
 SoundManager="*res://scripts/sound_effects.gd"
 
