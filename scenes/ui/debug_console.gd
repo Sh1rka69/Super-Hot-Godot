@@ -5,8 +5,8 @@ extends CanvasLayer
 
 enum LogType { INFO, WARNING, ERROR, DIAGNOSTIC }
 
-struct LogEntry:
-	var type: LogType
+class LogEntry:
+	var type: int
 	var message: String
 	var timestamp: String
 	var callsite: String
@@ -30,11 +30,11 @@ var is_console_open: bool = false
 
 @onready var stats_label: Label = $ConsoleWindow/Panel/VBoxContainer/TopBar/StatsLabel
 
-var current_filter: int = -1 # -1 means ALL
+var current_filter: int = -1
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	layer = 100 # Render above all other UI
+	layer = 100
 	
 	if console_window:
 		console_window.visible = false
@@ -76,8 +76,6 @@ func toggle_console() -> void:
 
 func _log_initial_system_info() -> void:
 	var dt = Time.get_datetime_dict_from_system()
-	var time_str = "%02d:%02d:%02d" % [dt.hour, dt.minute, dt.second]
-	
 	var os_name = OS.get_name()
 	var godot_ver = Engine.get_version_info().string
 	var video_adapter = RenderingServer.get_video_adapter_name()
@@ -135,7 +133,7 @@ func _run_comprehensive_diagnostics() -> void:
 		"res://scenes/main.tscn",
 		"res://scenes/map/test_map.tscn",
 		"res://scenes/player/player.tscn",
-		"scenes/enemy/enemy.tscn",
+		"res://scenes/enemy/enemy.tscn",
 		"res://scenes/weapons/pistol.tscn",
 		"res://scenes/weapons/bullet.tscn",
 		"res://scenes/ui/hud.tscn",
@@ -274,10 +272,7 @@ func _on_copy_pressed() -> void:
 	
 	plain_text += "\n=== END OF LOGS ===\n"
 	
-	# Set to system clipboard
 	DisplayServer.clipboard_set(plain_text)
-	
-	# Show toast feedback
 	_show_toast("📋 Все логи и ошибки скопированы в буфер обмена!")
 
 func _show_toast(msg: String) -> void:
