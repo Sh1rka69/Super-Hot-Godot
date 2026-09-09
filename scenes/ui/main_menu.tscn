@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" path="res://scenes/ui/main_menu.gd" id="1_menu"]
 [ext_resource type="Texture2D" path="res://assets/textures/Skybox_Day.jpg" id="2_sky"]
-[ext_resource type="PackedScene" uid="uid://bvx4yq5e14kpt" path="res://scenes/enemy/enemy.tscn" id="3_enemy"]
 
 [sub_resource type="PanoramaSkyMaterial" id="PanoramaSkyMaterial_1"]
 panorama = ExtResource("2_sky")
@@ -60,6 +59,19 @@ top_radius = 0.2
 bottom_radius = 2.0
 height = 10.0
 radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_crystal"]
+albedo_color = Color(0.95, 0.1, 0.04, 1)
+roughness = 0.2
+metallic = 0.15
+emission_enabled = true
+emission = Color(0.8, 0.05, 0)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_enemy"]
+material = SubResource("StandardMaterial3D_crystal")
+radius = 0.38
+height = 1.8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_play"]
 bg_color = Color(0.95, 0.2, 0.1, 1)
@@ -137,8 +149,9 @@ mesh = SubResource("BoxMesh_pillar")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2, -2)
 mesh = SubResource("BoxMesh_pillar")
 
-[node name="PreviewEnemy" parent="Menu3D" instance=ExtResource("3_enemy")]
-transform = Transform3D(-0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, -0.866025, 0, 0, 0)
+[node name="EnemyPreviewMesh" type="MeshInstance3D" parent="Menu3D" groups=["preview_enemy_mesh"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("CapsuleMesh_enemy")
 
 [node name="CameraPivot" type="Node3D" parent="Menu3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)

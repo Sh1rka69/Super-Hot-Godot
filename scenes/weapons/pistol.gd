@@ -1,7 +1,7 @@
 extends RigidBody3D
 
 ## Pistol Weapon for "Very Hot"
-## Thread-safe, deferred parenting to prevent physics callback lockups.
+## Safe parenting using Godot 4 reparent API.
 
 signal fired(ammo_left: int)
 
@@ -25,41 +25,54 @@ func _ready() -> void:
 		pickup_area.body_entered.connect(_on_pickup_body_entered)
 
 func equip_to_hand(parent_node: Node3D) -> void:
+	if not is_instance_valid(parent_node):
+		return
+	
 	is_equipped = true
 	is_thrown = false
-	set_deferred("freeze", true)
-	set_deferred("collision_layer", 0)
-	set_deferred("collision_mask", 0)
+	freeze = true
+	collision_layer = 0
+	collision_mask = 0
 	if pickup_area:
 		pickup_area.set_deferred("monitoring", false)
 	
-	_reparent_to_hand.call_deferred(parent_node)
+	_do_equip.call_deferred(parent_node)
 
-func _reparent_to_hand(parent_node: Node3D) -> void:
+func _do_equip(parent_node: Node3D) -> void:
 	if not is_instance_valid(parent_node):
 		return
-	if get_parent():
-		get_parent().remove_child(self)
-	parent_node.add_child(self)
+	if get_parent() == parent_node:
+		transform = Transform3D.IDENTITY
+		return
+	
+	if get_parent() != null:
+		reparent(parent_node, false)
+	else:
+		parent_node.add_child(self)
+	
 	transform = Transform3D.IDENTITY
 
 func drop_or_throw(from_transform: Transform3D, throw_impulse: Vector3) -> void:
 	is_equipped = false
-	_reparent_to_world.call_deferred(from_transform, throw_impulse)
+	_do_drop.call_deferred(from_transform, throw_impulse)
 
-func _reparent_to_world(from_transform: Transform3D, throw_impulse: Vector3) -> void:
-	set_deferred("freeze", false)
-	set_deferred("collision_layer", 2)
-	set_deferred("collision_mask", 1)
+func _do_drop(from_transform: Transform3D, throw_impulse: Vector3) -> void:
+	var world_tree = get_tree().current_scene
+	if not is_instance_valid(world_tree):
+		return
+	
+	if get_parent() != world_tree:
+		if get_parent() != null:
+			reparent(world_tree, true)
+		else:
+			world_tree.add_child(self)
+	
+	global_transform = from_transform
+	freeze = false
+	collision_layer = 2
+	collision_mask = 1
 	if pickup_area:
 		pickup_area.set_deferred("monitoring", true)
-	
-	var world_tree = get_tree().current_scene
-	if get_parent():
-		get_parent().remove_child(self)
-	if is_instance_valid(world_tree):
-		world_tree.add_child(self)
-	global_transform = from_transform
 	
 	if throw_impulse != Vector3.ZERO:
 		is_thrown = true

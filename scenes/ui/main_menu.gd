@@ -1,7 +1,7 @@
 extends Control
 
 ## Main Menu for "Very Hot"
-## Features interactive live 3D background and settings management with zero signal feedback loops.
+## Features interactive live 3D background with zero signal recursion and instant settings response.
 
 @onready var btn_play = $UI/CenterContainer/VBoxContainer/PlayButton
 @onready var btn_settings = $UI/CenterContainer/VBoxContainer/SettingsButton
@@ -25,7 +25,7 @@ extends Control
 @onready var world_env = $Menu3D/WorldEnvironment
 @onready var dir_light = $Menu3D/DirectionalLight3D
 @onready var sun_rays = $Menu3D/SunRays
-@onready var preview_enemy = $Menu3D/PreviewEnemy
+@onready var enemy_preview_mesh = $Menu3D/EnemyPreviewMesh
 
 func _ready() -> void:
 	Engine.time_scale = 1.0
@@ -69,8 +69,11 @@ func _process(delta: float) -> void:
 
 func _on_graphics_changed() -> void:
 	GameManager.apply_graphics_to_current_scene(world_env, dir_light, sun_rays)
-	if preview_enemy and preview_enemy.has_method("_update_crystal_materials"):
-		preview_enemy._update_crystal_materials()
+	if enemy_preview_mesh and enemy_preview_mesh.mesh and enemy_preview_mesh.mesh.material:
+		var mat = enemy_preview_mesh.mesh.material as StandardMaterial3D
+		if mat:
+			mat.emission_enabled = GameManager.bloom_enabled
+			mat.emission_energy_multiplier = 1.5 if GameManager.bloom_enabled else 0.0
 
 func _sync_ui_values() -> void:
 	if sens_slider:
