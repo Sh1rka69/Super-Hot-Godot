@@ -1,7 +1,7 @@
 extends CanvasLayer
 
 ## Pause Menu for "Very Hot"
-## Allows in-game real-time graphics and control settings adjustments.
+## Manages in-game graphics and sensitivity adjustments without signal feedback loops or freezes.
 
 @onready var panel = $Control/Panel
 @onready var resume_btn = $Control/Panel/VBoxContainer/ResumeButton
@@ -26,28 +26,31 @@ func _ready() -> void:
 	if menu_btn:
 		menu_btn.pressed.connect(_on_menu_pressed)
 	
-	_init_ui()
-
-func _init_ui() -> void:
 	if sens_slider:
-		sens_slider.value = GameManager.touch_look_sensitivity * 1000.0
 		sens_slider.value_changed.connect(_on_sens_changed)
 	
 	if check_shadows:
-		check_shadows.button_pressed = GameManager.shadows_enabled
 		check_shadows.toggled.connect(func(val): GameManager.set_graphics_param("shadows", val))
-	
 	if check_ssao:
-		check_ssao.button_pressed = GameManager.ssao_enabled
 		check_ssao.toggled.connect(func(val): GameManager.set_graphics_param("ssao", val))
-	
 	if check_rays:
-		check_rays.button_pressed = GameManager.volumetric_rays_enabled
 		check_rays.toggled.connect(func(val): GameManager.set_graphics_param("volumetric_rays", val))
-	
 	if check_bloom:
-		check_bloom.button_pressed = GameManager.bloom_enabled
 		check_bloom.toggled.connect(func(val): GameManager.set_graphics_param("bloom", val))
+	
+	_sync_ui_values()
+
+func _sync_ui_values() -> void:
+	if sens_slider:
+		sens_slider.set_value_no_signal(GameManager.touch_look_sensitivity * 1000.0)
+	if check_shadows:
+		check_shadows.set_pressed_no_signal(GameManager.shadows_enabled)
+	if check_ssao:
+		check_ssao.set_pressed_no_signal(GameManager.ssao_enabled)
+	if check_rays:
+		check_rays.set_pressed_no_signal(GameManager.volumetric_rays_enabled)
+	if check_bloom:
+		check_bloom.set_pressed_no_signal(GameManager.bloom_enabled)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE):
@@ -62,7 +65,7 @@ func toggle_pause() -> void:
 		GameManager.toggle_pause()
 
 func show_menu() -> void:
-	_init_ui()
+	_sync_ui_values()
 	visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
@@ -73,7 +76,10 @@ func hide_menu() -> void:
 
 func _on_resume_pressed() -> void:
 	hide_menu()
-	GameManager.toggle_pause()
+	if get_tree().paused:
+		get_tree().paused = false
+	GameManager.current_state = GameManager.GameState.PLAYING
+	GameManager.request_time_scale(0.8, 0.3)
 
 func _on_restart_pressed() -> void:
 	hide_menu()

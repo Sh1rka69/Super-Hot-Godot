@@ -1,7 +1,7 @@
 extends Control
 
 ## Main Menu for "Very Hot"
-## Features interactive live 3D background with instant visual feedback for graphics settings.
+## Features interactive live 3D background and settings management with zero signal feedback loops.
 
 @onready var btn_play = $UI/CenterContainer/VBoxContainer/PlayButton
 @onready var btn_settings = $UI/CenterContainer/VBoxContainer/SettingsButton
@@ -21,7 +21,6 @@ extends Control
 @onready var controls_modal = $UI/ControlsModal
 @onready var btn_close_controls = $UI/ControlsModal/Panel/VBoxContainer/CloseControlsButton
 
-@onready var menu_cam = $Menu3D/CameraPivot/Camera3D
 @onready var cam_pivot = $Menu3D/CameraPivot
 @onready var world_env = $Menu3D/WorldEnvironment
 @onready var dir_light = $Menu3D/DirectionalLight3D
@@ -46,7 +45,21 @@ func _ready() -> void:
 	btn_close_settings.pressed.connect(func(): settings_modal.visible = false)
 	btn_close_controls.pressed.connect(func(): controls_modal.visible = false)
 	
-	_init_settings_ui()
+	if sens_slider:
+		sens_slider.value_changed.connect(_on_sens_changed)
+	if vol_slider:
+		vol_slider.value_changed.connect(_on_vol_changed)
+	
+	if check_shadows:
+		check_shadows.toggled.connect(func(val): GameManager.set_graphics_param("shadows", val))
+	if check_ssao:
+		check_ssao.toggled.connect(func(val): GameManager.set_graphics_param("ssao", val))
+	if check_rays:
+		check_rays.toggled.connect(func(val): GameManager.set_graphics_param("volumetric_rays", val))
+	if check_bloom:
+		check_bloom.toggled.connect(func(val): GameManager.set_graphics_param("bloom", val))
+	
+	_sync_ui_values()
 	GameManager.apply_graphics_to_current_scene(world_env, dir_light, sun_rays)
 	GameManager.graphics_settings_changed.connect(_on_graphics_changed)
 
@@ -59,36 +72,25 @@ func _on_graphics_changed() -> void:
 	if preview_enemy and preview_enemy.has_method("_update_crystal_materials"):
 		preview_enemy._update_crystal_materials()
 
-func _init_settings_ui() -> void:
+func _sync_ui_values() -> void:
 	if sens_slider:
-		sens_slider.value = GameManager.touch_look_sensitivity * 1000.0
-		sens_slider.value_changed.connect(_on_sens_changed)
-	
+		sens_slider.set_value_no_signal(GameManager.touch_look_sensitivity * 1000.0)
 	if vol_slider:
-		vol_slider.value = GameManager.sound_volume * 100.0
-		vol_slider.value_changed.connect(_on_vol_changed)
-	
+		vol_slider.set_value_no_signal(GameManager.sound_volume * 100.0)
 	if check_shadows:
-		check_shadows.button_pressed = GameManager.shadows_enabled
-		check_shadows.toggled.connect(func(val): GameManager.set_graphics_param("shadows", val))
-	
+		check_shadows.set_pressed_no_signal(GameManager.shadows_enabled)
 	if check_ssao:
-		check_ssao.button_pressed = GameManager.ssao_enabled
-		check_ssao.toggled.connect(func(val): GameManager.set_graphics_param("ssao", val))
-	
+		check_ssao.set_pressed_no_signal(GameManager.ssao_enabled)
 	if check_rays:
-		check_rays.button_pressed = GameManager.volumetric_rays_enabled
-		check_rays.toggled.connect(func(val): GameManager.set_graphics_param("volumetric_rays", val))
-	
+		check_rays.set_pressed_no_signal(GameManager.volumetric_rays_enabled)
 	if check_bloom:
-		check_bloom.button_pressed = GameManager.bloom_enabled
-		check_bloom.toggled.connect(func(val): GameManager.set_graphics_param("bloom", val))
+		check_bloom.set_pressed_no_signal(GameManager.bloom_enabled)
 
 func _on_play_pressed() -> void:
 	GameManager.restart_game()
 
 func _on_settings_pressed() -> void:
-	_init_settings_ui()
+	_sync_ui_values()
 	settings_modal.visible = true
 
 func _on_controls_pressed() -> void:
